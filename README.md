@@ -1,14 +1,14 @@
 # Grape::NamedRoutes
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/grape/named_routes`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+It is an extenstion for API creating framework [Grape](https://github.com/intridea/grape).
+With this gem you can create named routes to call them later without hardcoding pathes.
 
 ## Installation
 
-Add this line to your application's Gemfile:
+Add these lines to your application's Gemfile:
 
 ```ruby
+gem 'grape'
 gem 'grape-named_routes'
 ```
 
@@ -18,21 +18,57 @@ And then execute:
 
 Or install it yourself as:
 
+    $ gem install grape
     $ gem install grape-named_routes
 
 ## Usage
 
-TODO: Write usage instructions here
+These endpoints simply return their URLs.
 
-## Development
+```ruby
+module Twitter
+  class API < Grape::API
+    resource :statuses do
+      desc 'Endpoint without params'
+      get :home_timeline, as: :home_timeline do
+        Twitter::API.home_timeline_path
+      end
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake rspec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+      desc 'Endpoint with route param'
+      params do
+        requires :id, type: Integer
+      end
+      route_param :id do
+        get as: :status do
+          Twitter::API.status_path(id: params[:id])
+        end
+      end
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+      desc 'Endpoint with inline param'
+      params do
+        requires :param, type: String
+      end
+      get '/custom_route/:param', as: :inline do
+        Twitter::API.inline_path(param: params[:param])
+      end
+    end
+  end
+end
+```
+
+If you somewhy need to get `endpoint` object instead of compiled path, you can use following:
+
+```ruby
+  Twitter::API.find_endpoint(:home_timeline) # returns Grape::Endpoint instance
+
+  # also supports "dangerous" version (raises an error if route is not declared)
+  Twitter::API.find_endpoint!(:home_timeline)
+```
+
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/grape-named_routes.
+Bug reports and pull requests are welcome on GitHub at https://github.com/hedgesky/grape-named_routes.
 
 
 ## License
